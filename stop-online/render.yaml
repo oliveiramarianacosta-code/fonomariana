@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: stop-online
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_ORIGIN
+        value: https://present-garnet-x4vb.here.now

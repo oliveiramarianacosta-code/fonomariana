@@ -1,0 +1,4 @@
+node_modules/
+.herenow/
+.env
+.DS_Store
