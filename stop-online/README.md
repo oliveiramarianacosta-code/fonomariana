@@ -60,4 +60,4 @@ Limites básicos: 80 ações/segundo/conexão, 500 conexões e 200 salas por pro
 Referências: [WebSocket no MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket), [biblioteca ws](https://github.com/websockets/ws), [here.now](https://here.now/docs).
 
 ## Estado da entrega
-Interface publicada em https://present-garnet-x4vb.here.now/ (publicação autenticada permanente). O servidor multiplayer ainda não foi hospedado. Dois testes automatizados passaram: pontuação e fluxo com dois clientes reais. A inspeção visual no navegador integrado não foi concluída porque a ferramenta de pré-visualização não conectou.
+Interface publicada em https://present-garnet-x4vb.here.now/ (publicação autenticada permanente). Servidor publicado no Render: https://stop-fonomariana.onrender.com. A interface no here.now já usa wss://stop-fonomariana.onrender.com/ws automaticamente. Dois testes automatizados passaram: pontuação e fluxo com dois clientes reais. A inspeção visual no navegador integrado não foi concluída porque a ferramenta de pré-visualização não conectou.

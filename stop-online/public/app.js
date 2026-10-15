@@ -3,7 +3,7 @@ const categories=['Nome','CEP (cidade/estado/país)','Time de futebol','Animal',
 const normalized=s=>s.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
 let socket,session=JSON.parse(sessionStorage.getItem('stop-session')||'null'),room,connected=false,retry,toast;
 const localEndpoint=`${location.protocol==='https:'?'wss':'ws'}://${location.host}/ws`;
-let endpoint=localStorage.getItem('stop-endpoint') || (location.hostname.endsWith('.here.now')?'':localEndpoint);
+let endpoint=localStorage.getItem('stop-endpoint') || (location.hostname.endsWith('.here.now')?'wss://stop-fonomariana.onrender.com/ws':localEndpoint);
 $('endpoint').value=endpoint;
 function message(s){$('message').textContent=s;clearTimeout(toast);toast=setTimeout(()=>$('message').textContent='',6500);}
 function send(type,data={}){if(!connected){message('Conecte um servidor online para jogar.');return;}socket.send(JSON.stringify({type,...data}));}
