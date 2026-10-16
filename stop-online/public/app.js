@@ -19,7 +19,17 @@ function connect(){
 }
 $('connect').onclick=()=>{const value=$('endpoint').value.trim();if(value!==endpoint){session=null;room=null;sessionStorage.removeItem('stop-session');}endpoint=value;localStorage.setItem('stop-endpoint',endpoint);connect();render();};
 $('create').onclick=()=>send('create',{name:$('name').value});$('join').onclick=()=>send('join',{name:$('name').value,code:$('code').value});
-$('start').onclick=()=>send('start');$('stop').onclick=()=>send('stop');$('finish').onclick=()=>send('finish');$('cancel').onclick=()=>{if(confirm('Cancelar esta rodada sem atribuir pontos?'))send('cancel');};$('leave').onclick=()=>{if(connected)send('leave');else{session=null;room=null;sessionStorage.removeItem('stop-session');render();}};
+$('start').onclick=()=>send('start');$('stop').onclick=()=>{
+ if(!connected){message('A conexão caiu. Aguarde reconectar antes de dar STOP.');return;}
+ const answers=fields.map(input=>input.value);
+ const empty=answers.findIndex(answer=>!answer.trim());
+ if(empty!==-1){message(`Preencha a categoria ${categories[empty]}.`);fields[empty].focus();return;}
+ const wrong=answers.findIndex(answer=>!normalized(answer).startsWith(room.letter));
+ if(wrong!==-1){message(`${categories[wrong]}: a resposta precisa começar com a letra ${room.letter}.`);fields[wrong].focus();return;}
+ // WebSocket preserves message order: flush all visible answers before STOP.
+ answers.forEach((value,index)=>send('answer',{index,value}));
+ send('stop');
+};$('finish').onclick=()=>send('finish');$('cancel').onclick=()=>{if(confirm('Cancelar esta rodada sem atribuir pontos?'))send('cancel');};$('leave').onclick=()=>{if(connected)send('leave');else{session=null;room=null;sessionStorage.removeItem('stop-session');render();}};
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('Código copiado!');}catch{message(`Código da sala: ${room.code}`);}};
 const fields=categories.map((name,index)=>{const wrapper=document.createElement('div'),label=document.createElement('label'),input=document.createElement('input');label.textContent=name;label.htmlFor=`answer-${index}`;input.id=label.htmlFor;input.maxLength=60;input.autocomplete='off';input.oninput=()=>send('answer',{index,value:input.value});wrapper.append(label,input);$('fields').append(wrapper);return input;});
 function text(tag,value){const el=document.createElement(tag);el.textContent=value;return el;}
@@ -34,7 +44,7 @@ function render(){
  $('start').hidden=!host||!['lobby','results'].includes(room.phase);$('start').disabled=!connected||Object.values(room.players).filter(p=>p.online).length<2;
  $('finish').hidden=!host||!review;$('cancel').hidden=!host||!playing;
  const roundKey=`${room.code}:${room.round}`;
- fields.forEach((input,i)=>{input.disabled=!playing||!connected||!room.roster.includes(me);if(lastRound!==roundKey||document.activeElement!==input)input.value=room.answers[me]?.[i]||'';});lastRound=roundKey;
+ fields.forEach((input,i)=>{input.disabled=!playing||!connected||!room.roster.includes(me);if(lastRound!==roundKey||!playing)input.value=room.answers[me]?.[i]||'';});lastRound=roundKey;
  $('players').replaceChildren(...Object.entries(room.players).sort((a,b)=>b[1].score-a[1].score).map(([id,p])=>{const li=document.createElement('li'),name=text('span',p.name+(id===me?' (você)':''));name.append(text('small',`${p.online?'Conectado':'Ausente'}${id===room.host?' · anfitrião':''}`));li.append(name,text('strong',`${p.score} pts`));return li;}));
  $('review').replaceChildren();
  if(review||room.results)for(const owner of room.roster){const card=document.createElement('section');card.className='card review-card';card.append(text('h3',`${room.players[owner].name}${room.results?' · '+room.results[owner].total+' pontos':''}`));room.answers[owner].forEach((answer,index)=>{const row=document.createElement('div');row.className='review-row';const word=text('div',answer||'—');word.prepend(text('small',categories[index]));row.append(word);if(review){if(!answer.trim()||!normalized(answer).startsWith(room.letter))row.append(text('small','Inválida · 0 pontos'));else if(room.roster.includes(me)){const votes=document.createElement('div');votes.className='votes';for(const [valid,label]of [[true,'Vale ✓'],[false,'Não vale ×']]){const b=text('button',label);b.className='secondary'+(room.votes[me]?.[owner]?.[index]===valid?' selected':'');b.setAttribute('aria-pressed',String(room.votes[me]?.[owner]?.[index]===valid));b.disabled=!connected;b.onclick=()=>send('vote',{owner,index,valid});votes.append(b);}row.append(votes);}}else row.append(text('span',`+${room.results[owner].points[index]} pts`));card.append(row);});$('review').append(card);}
